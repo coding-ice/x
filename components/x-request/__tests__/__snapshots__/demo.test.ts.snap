@@ -2,11 +2,11 @@
 
 exports[`renders components/x-request/demo/basic.tsx correctly 1`] = `
 <div
-  class="ant-space ant-space-horizontal ant-space-align-start"
-  style="column-gap:16px;row-gap:16px"
+  class="ant-splitter ant-splitter-horizontal"
 >
   <div
-    class="ant-space-item"
+    class="ant-splitter-panel"
+    style="flex-basis:auto;flex-grow:1"
   >
     <button
       class="ant-btn ant-btn-primary ant-btn-color-primary ant-btn-variant-solid"
@@ -18,7 +18,19 @@ exports[`renders components/x-request/demo/basic.tsx correctly 1`] = `
     </button>
   </div>
   <div
-    class="ant-space-item"
+    aria-valuemax="0"
+    aria-valuemin="0"
+    aria-valuenow="50"
+    class="ant-splitter-bar"
+    role="separator"
+  >
+    <div
+      class="ant-splitter-bar-dragger"
+    />
+  </div>
+  <div
+    class="ant-splitter-panel"
+    style="margin-left:16px;flex-basis:auto;flex-grow:1"
   >
     <div
       class="ant-thought-chain ant-thought-chain-middle"
@@ -56,6 +68,7 @@ exports[`renders components/x-request/demo/basic.tsx correctly 1`] = `
             class="ant-thought-chain-item-header-box"
           >
             <span
+              aria-describedby="test-id"
               class="ant-typography ant-typography-ellipsis ant-typography-ellipsis-single-line ant-thought-chain-item-title"
             >
               <strong>
@@ -138,11 +151,11 @@ exports[`renders components/x-request/demo/basic.tsx correctly 1`] = `
 
 exports[`renders components/x-request/demo/custom-transformer.tsx correctly 1`] = `
 <div
-  class="ant-space ant-space-horizontal ant-space-align-start"
-  style="column-gap:16px;row-gap:16px"
+  class="ant-splitter ant-splitter-horizontal"
 >
   <div
-    class="ant-space-item"
+    class="ant-splitter-panel"
+    style="flex-basis:auto;flex-grow:1"
   >
     <button
       class="ant-btn ant-btn-primary ant-btn-color-primary ant-btn-variant-solid"
@@ -154,7 +167,19 @@ exports[`renders components/x-request/demo/custom-transformer.tsx correctly 1`] 
     </button>
   </div>
   <div
-    class="ant-space-item"
+    aria-valuemax="0"
+    aria-valuemin="0"
+    aria-valuenow="50"
+    class="ant-splitter-bar"
+    role="separator"
+  >
+    <div
+      class="ant-splitter-bar-dragger"
+    />
+  </div>
+  <div
+    class="ant-splitter-panel"
+    style="margin-left:16px;flex-basis:auto;flex-grow:1"
   >
     <div
       class="ant-thought-chain ant-thought-chain-middle"
@@ -192,6 +217,7 @@ exports[`renders components/x-request/demo/custom-transformer.tsx correctly 1`] 
             class="ant-thought-chain-item-header-box"
           >
             <span
+              aria-describedby="test-id"
               class="ant-typography ant-typography-ellipsis ant-typography-ellipsis-single-line ant-thought-chain-item-title"
             >
               <strong>
