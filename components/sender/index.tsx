@@ -25,19 +25,22 @@ type TextareaProps = GetProps<typeof Input.TextArea>;
 export interface SenderComponents {
   input?: React.ComponentType<TextareaProps>;
 }
-
+type ActionsComponents = {
+  SendButton: React.ComponentType<ButtonProps>;
+  ClearButton: React.ComponentType<ButtonProps>;
+  LoadingButton: React.ComponentType<ButtonProps>;
+  SpeechButton: React.ComponentType<ButtonProps>;
+};
 export type ActionsRender = (
   ori: React.ReactNode,
   info: {
-    components: {
-      SendButton: React.ComponentType<ButtonProps>;
-      ClearButton: React.ComponentType<ButtonProps>;
-      LoadingButton: React.ComponentType<ButtonProps>;
-    };
+    components: ActionsComponents;
   },
 ) => React.ReactNode;
 
-export interface SenderProps extends Pick<TextareaProps, 'placeholder' | 'onKeyPress'> {
+export type FooterRender = (info: { components: ActionsComponents }) => React.ReactNode;
+export interface SenderProps
+  extends Pick<TextareaProps, 'placeholder' | 'onKeyPress' | 'onFocus' | 'onBlur'> {
   prefixCls?: string;
   defaultValue?: string;
   value?: string;
@@ -53,25 +56,29 @@ export interface SenderProps extends Pick<TextareaProps, 'placeholder' | 'onKeyP
   onCancel?: VoidFunction;
   onKeyDown?: React.KeyboardEventHandler<any>;
   onPaste?: React.ClipboardEventHandler<HTMLElement>;
-  onPasteFile?: (file: File) => void;
+  onPasteFile?: (firstFile: File, files: FileList) => void;
   components?: SenderComponents;
   styles?: {
     prefix?: React.CSSProperties;
     input?: React.CSSProperties;
     actions?: React.CSSProperties;
+    footer?: React.CSSProperties;
   };
   rootClassName?: string;
   classNames?: {
     prefix?: string;
     input?: string;
     actions?: string;
+    footer?: string;
   };
   style?: React.CSSProperties;
   className?: string;
   actions?: React.ReactNode | ActionsRender;
   allowSpeech?: AllowSpeech;
   prefix?: React.ReactNode;
+  footer?: React.ReactNode | FooterRender;
   header?: React.ReactNode;
+  autoSize?: boolean | { minRows?: number; maxRows?: number };
 }
 
 export type SenderRef = {
@@ -85,6 +92,14 @@ function getComponent<T>(
 ): React.ComponentType<T> {
   return getValue(components, path) || defaultComponent;
 }
+
+/** Used for actions render needed components */
+const sharedRenderComponents = {
+  SendButton,
+  ClearButton,
+  LoadingButton,
+  SpeechButton,
+};
 
 const ForwardSender = React.forwardRef<SenderRef, SenderProps>((props, ref) => {
   const {
@@ -109,9 +124,11 @@ const ForwardSender = React.forwardRef<SenderRef, SenderProps>((props, ref) => {
     disabled,
     allowSpeech,
     prefix,
+    footer,
     header,
     onPaste,
     onPasteFile,
+    autoSize = { maxRows: 8 },
     ...rest
   } = props;
 
@@ -225,17 +242,15 @@ const ForwardSender = React.forwardRef<SenderRef, SenderProps>((props, ref) => {
         break;
     }
 
-    if (onKeyPress) {
-      onKeyPress(e);
-    }
+    onKeyPress?.(e);
   };
 
   // ============================ Paste =============================
   const onInternalPaste: React.ClipboardEventHandler<HTMLElement> = (e) => {
-    // Get file
-    const file = e.clipboardData?.files[0];
-    if (file && onPasteFile) {
-      onPasteFile(file);
+    // Get files
+    const files = e.clipboardData?.files;
+    if (files?.length && onPasteFile) {
+      onPasteFile(files[0], files);
       e.preventDefault();
     }
 
@@ -266,15 +281,29 @@ const ForwardSender = React.forwardRef<SenderRef, SenderProps>((props, ref) => {
   // Custom actions
   if (typeof actions === 'function') {
     actionNode = actions(actionNode, {
-      components: {
-        SendButton,
-        ClearButton,
-        LoadingButton,
-      },
+      components: sharedRenderComponents,
     });
-  } else if (actions) {
+  } else if (actions || actions === false) {
     actionNode = actions;
   }
+  // Custom actions context props
+  const actionsButtonContextProps = {
+    prefixCls: actionBtnCls,
+    onSend: triggerSend,
+    onSendDisabled: !innerValue,
+    onClear: triggerClear,
+    onClearDisabled: !innerValue,
+    onCancel,
+    onCancelDisabled: !loading,
+    onSpeech: () => triggerSpeech(false),
+    onSpeechDisabled: !speechPermission,
+    speechRecording,
+    disabled,
+  };
+
+  // ============================ Footer ============================
+  const footerNode =
+    typeof footer === 'function' ? footer({ components: sharedRenderComponents }) : footer || null;
 
   // ============================ Render ============================
   return wrapCSSVar(
@@ -283,74 +312,75 @@ const ForwardSender = React.forwardRef<SenderRef, SenderProps>((props, ref) => {
       {header && (
         <SendHeaderContext.Provider value={{ prefixCls }}>{header}</SendHeaderContext.Provider>
       )}
+      <ActionButtonContext.Provider value={actionsButtonContextProps}>
+        <div className={`${prefixCls}-content`} onMouseDown={onContentMouseDown}>
+          {/* Prefix */}
+          {prefix && (
+            <div
+              className={classnames(
+                `${prefixCls}-prefix`,
+                contextConfig.classNames.prefix,
+                classNames.prefix,
+              )}
+              style={{ ...contextConfig.styles.prefix, ...styles.prefix }}
+            >
+              {prefix}
+            </div>
+          )}
 
-      <div className={`${prefixCls}-content`} onMouseDown={onContentMouseDown}>
-        {/* Prefix */}
-        {prefix && (
+          {/* Input */}
+          <InputTextArea
+            {...inputProps}
+            disabled={disabled}
+            style={{ ...contextConfig.styles.input, ...styles.input }}
+            className={classnames(inputCls, contextConfig.classNames.input, classNames.input)}
+            autoSize={autoSize}
+            value={innerValue}
+            onChange={(event) => {
+              triggerValueChange(
+                (event.target as HTMLTextAreaElement).value,
+                event as React.ChangeEvent<HTMLTextAreaElement>,
+              );
+              triggerSpeech(true);
+            }}
+            onPressEnter={onInternalKeyPress}
+            onCompositionStart={onInternalCompositionStart}
+            onCompositionEnd={onInternalCompositionEnd}
+            onKeyDown={onKeyDown}
+            onPaste={onInternalPaste}
+            variant="borderless"
+            readOnly={readOnly}
+          />
+          {/* Action List */}
+          {actionNode && (
+            <div
+              className={classnames(
+                actionListCls,
+                contextConfig.classNames.actions,
+                classNames.actions,
+              )}
+              style={{ ...contextConfig.styles.actions, ...styles.actions }}
+            >
+              {actionNode}
+            </div>
+          )}
+        </div>
+        {footerNode && (
           <div
             className={classnames(
-              `${prefixCls}-prefix`,
-              contextConfig.classNames.prefix,
-              classNames.prefix,
+              `${prefixCls}-footer`,
+              contextConfig.classNames.footer,
+              classNames.footer,
             )}
-            style={{ ...contextConfig.styles.prefix, ...styles.prefix }}
-          >
-            {prefix}
-          </div>
-        )}
-
-        {/* Input */}
-        <InputTextArea
-          {...inputProps}
-          disabled={disabled}
-          style={{ ...contextConfig.styles.input, ...styles.input }}
-          className={classnames(inputCls, contextConfig.classNames.input, classNames.input)}
-          autoSize={{ maxRows: 8 }}
-          value={innerValue}
-          onChange={(event) => {
-            triggerValueChange(
-              (event.target as HTMLTextAreaElement).value,
-              event as React.ChangeEvent<HTMLTextAreaElement>,
-            );
-            triggerSpeech(true);
-          }}
-          onPressEnter={onInternalKeyPress}
-          onCompositionStart={onInternalCompositionStart}
-          onCompositionEnd={onInternalCompositionEnd}
-          onKeyDown={onKeyDown}
-          onPaste={onInternalPaste}
-          variant="borderless"
-          readOnly={readOnly}
-        />
-
-        {/* Action List */}
-        <div
-          className={classnames(
-            actionListCls,
-            contextConfig.classNames.actions,
-            classNames.actions,
-          )}
-          style={{ ...contextConfig.styles.actions, ...styles.actions }}
-        >
-          <ActionButtonContext.Provider
-            value={{
-              prefixCls: actionBtnCls,
-              onSend: triggerSend,
-              onSendDisabled: !innerValue,
-              onClear: triggerClear,
-              onClearDisabled: !innerValue,
-              onCancel,
-              onCancelDisabled: !loading,
-              onSpeech: () => triggerSpeech(false),
-              onSpeechDisabled: !speechPermission,
-              speechRecording,
-              disabled,
+            style={{
+              ...contextConfig.styles.footer,
+              ...styles.footer,
             }}
           >
-            {actionNode}
-          </ActionButtonContext.Provider>
-        </div>
-      </div>
+            {footerNode}
+          </div>
+        )}
+      </ActionButtonContext.Provider>
     </div>,
   );
 });

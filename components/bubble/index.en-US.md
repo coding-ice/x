@@ -18,7 +18,6 @@ Often used when chatting.
 ## Examples
 
 <!-- prettier-ignore -->
-<code src="./demo/debug.tsx" debug>debug</code>
 <code src="./demo/basic.tsx">Basic</code>
 <code src="./demo/avatar-and-placement.tsx">Placement and avatar</code>
 <code src="./demo/header-and-footer.tsx">Header and footer</code>
@@ -30,6 +29,9 @@ Often used when chatting.
 <code src="./demo/list.tsx">Bubble List</code>
 <code src="./demo/bubble-custom.tsx">Semantic Custom</code>
 <code src="./demo/list-custom.tsx">Custom List Content</code>
+<code src="./demo/gpt-vis.tsx">Using GPT-Vis to render charts</code>
+<code src="./demo/debug.tsx" debug>debug</code>
+<code src="./demo/debug-list.tsx" debug>debug list</code>
 
 ## API
 
@@ -60,7 +62,7 @@ Common props ref：[Common props](/docs/react/common-props)
 | --- | --- | --- | --- | --- |
 | autoScroll | When the content is updated, scroll to the latest position automatically. If the user scrolls, the automatic scrolling will be paused. | boolean | true |  |
 | items | Bubble items list | (BubbleProps & { key?: string \| number, role?: string })[] | - |  |
-| roles | Set the default properties of the bubble. The `role` in `items` will be automatically matched. | Record<string, BubbleProps> \| (bubble) => BubbleProps | - |  |
+| roles | Set the default properties of the bubble. The `role` in `items` will be automatically matched. | Record<string, BubbleProps> \| (bubble, index) => BubbleProps | - |  |
 
 ## Semantic DOM
 
