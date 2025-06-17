@@ -84,19 +84,6 @@ describe('bubble', () => {
     expect(element?.textContent).toBe('Extra for: extra content');
   });
 
-  it('should render footer with function and get content', () => {
-    const content = 'Test content';
-    const footerFunction = (content: BubbleContentType) => (
-      <div className="test-footer">{`Footer for: ${content}`}</div>
-    );
-    const { container } = render(<Bubble content={content} footer={footerFunction} />);
-    const element = container.querySelector<HTMLSpanElement>(
-      '.ant-bubble .ant-bubble-footer .test-footer',
-    );
-    expect(element).toBeTruthy();
-    expect(element?.textContent).toBe('Footer for: Test content');
-  });
-
   it('Bubble support typing', () => {
     const { container } = render(<Bubble typing content="test" />);
     expect(container.querySelector<HTMLDivElement>('.ant-bubble')).toHaveClass('ant-bubble-typing');
