@@ -1442,7 +1442,7 @@ exports[`renders components/bubble/demo/extra.tsx extend context correctly 1`] =
     <div
       class="ant-bubble-content ant-bubble-content-filled"
     >
-      hello ice !
+      Hello ice !
       <div
         class="ant-bubble-extra"
       >
