@@ -68,7 +68,7 @@ describe('bubble', () => {
     const { container } = render(<Bubble content="extra content" extra="extra" />);
     const element = container.querySelector<HTMLSpanElement>('.ant-bubble .ant-bubble-extra');
     expect(element).toBeTruthy();
-    expect(element?.textContent).toBe('extra footer');
+    expect(element?.textContent).toBe('extra');
   });
 
   it('should render extra with function and get content', () => {
